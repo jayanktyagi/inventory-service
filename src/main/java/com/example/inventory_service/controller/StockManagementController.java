@@ -15,22 +15,22 @@ public class StockManagementController {
         this.stockManagementService = stockManagementService;
     }
 
-    @PostMapping("/{productId}")
+    @PostMapping("/increase/{productId}")
     public StockManagementDto decreaseLevel(@PathVariable Long productId,@RequestParam int decrease){
         return stockManagementService.decreaseStock(productId,decrease);
     }
 
-    @PostMapping("/{productId}")
+    @PostMapping("/decrease/{productId}")
     public StockManagementDto increaseLevel(@PathVariable Long productId,@RequestParam int increase){
         return stockManagementService.increaseStock(productId,increase);
     }
 
-    @PostMapping("/{productId}")
+    @PostMapping("/set-max/{productId}")
     public StockManagementDto setMaxQuantity(@PathVariable Long productId, @RequestParam int maxQuantity){
         return stockManagementService.setMaxQuantity(productId, maxQuantity);
     }
 
-    @PostMapping("/{productId}")
+    @PostMapping("/reorder/{productId}")
     public  StockManagementDto setReorderLevel(@PathVariable Long productId, @RequestParam int reorderLevel){
         return  stockManagementService.setReorderLevel(productId, reorderLevel);
     }
@@ -40,7 +40,7 @@ public class StockManagementController {
         return stockManagementService.getStockByProductId(productId);
     }
 
-    @GetMapping("/{productId}")
+    @GetMapping("/checkStock/{productId}")
     public boolean checkStockAvailability(@PathVariable Long productId, @RequestParam int quantity){
         return stockManagementService.checkStockAvailability(productId,quantity);
     }

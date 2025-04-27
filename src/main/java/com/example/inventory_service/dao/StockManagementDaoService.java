@@ -3,9 +3,11 @@ package com.example.inventory_service.dao;
 import com.example.inventory_service.entity.StockManagement;
 import com.example.inventory_service.repository.StockManagementRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import java.util.Optional;
 
+@Service
 public class StockManagementDaoService {
 
     StockManagementRepository stockManagementRepository;
