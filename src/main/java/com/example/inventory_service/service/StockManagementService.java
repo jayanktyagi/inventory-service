@@ -91,7 +91,7 @@ public class StockManagementService {
         stockManagementDto.setProduct(productService.toDto(stockManagement.getProduct()));
         stockManagementDto.setMaxStockLevel(stockManagement.getMaxStockLevel());
         stockManagementDto.setQuantity(stockManagement.getQuantity());
-        stockManagementDto.setReorderLevel(stockManagementDto.getReorderLevel());
+        stockManagementDto.setReorderLevel(stockManagement.getReorderLevel());
         stockManagementDto.setUpdatedAt(stockManagement.getUpdatedAt());
         return stockManagementDto;
     }
