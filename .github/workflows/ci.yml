@@ -1,0 +1,143 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  # ─────────────────────────────────────────────
+  # 1. BUILD & TEST
+  # ─────────────────────────────────────────────
+  build-and-test:
+    name: Build & Test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: 'maven'
+
+      - name: Build and run tests
+        run: mvn clean verify -B --no-transfer-progress
+
+      - name: Upload JAR artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: inventory-service-jar
+          path: target/*.jar
+          retention-days: 7
+
+      - name: Upload Surefire test reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: surefire-reports
+          path: target/surefire-reports/
+          retention-days: 7
+
+  # ─────────────────────────────────────────────
+  # 2. CODE COVERAGE (JaCoCo)
+  # ─────────────────────────────────────────────
+  coverage:
+    name: Code Coverage
+    runs-on: ubuntu-latest
+    needs: build-and-test
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: 'maven'
+
+      - name: Generate JaCoCo coverage report
+        run: mvn clean verify jacoco:report -B --no-transfer-progress
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: jacoco-report
+          path: target/site/jacoco/
+          retention-days: 7
+
+  # ─────────────────────────────────────────────
+  # 3. CODE QUALITY — Checkstyle + SpotBugs
+  # ─────────────────────────────────────────────
+  code-quality:
+    name: Code Quality
+    runs-on: ubuntu-latest
+    needs: build-and-test
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: 'maven'
+
+      - name: Run Checkstyle
+        run: mvn checkstyle:check -B --no-transfer-progress
+
+      - name: Run SpotBugs
+        run: mvn compile spotbugs:check -B --no-transfer-progress
+
+      - name: Upload SpotBugs report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: spotbugs-report
+          path: target/spotbugsXml.xml
+          retention-days: 7
+
+  # ─────────────────────────────────────────────
+  # 4. SECURITY — OWASP Dependency Check
+  # ─────────────────────────────────────────────
+  security:
+    name: Dependency Vulnerability Scan
+    runs-on: ubuntu-latest
+    needs: build-and-test
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: 'maven'
+
+      - name: OWASP Dependency Check
+        env:
+          NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
+        run: |
+          mvn dependency-check:check \
+            -DfailBuildOnCVSS=7 \
+            -DnvdApiKey=${NVD_API_KEY} \
+            -B --no-transfer-progress
+        continue-on-error: true
+
+      - name: Upload OWASP report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: owasp-dependency-check-report
+          path: target/dependency-check-report.html
+          retention-days: 14
